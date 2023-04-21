@@ -147,3 +147,4 @@ if __name__ == '__main__':
     tf.create_files(f"{folderPath}\\", char[0], char[1], following)
     intChar = int(char[1]) + 1
     fileComparison(f'{folderPath}\\{user} {intChar}.txt', f'{folderPath}\\{user} {intChar-1}.txt')
+    #
