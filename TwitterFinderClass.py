@@ -8,9 +8,10 @@ from FileComparison import fileComparison
 import time
 import os
 from dotenv import load_dotenv
+import sqlite3 as sl
 
 class TwitterFinder:
-    def __init__(self, username, password, user) -> None:
+    def __init__(self, username, password, user):
         service = ChromeService(executable_path=ChromeDriverManager().install())
         chromeOptions = webdriver.ChromeOptions()
         chromeOptions.add_argument("--headless")
@@ -20,50 +21,56 @@ class TwitterFinder:
         self.username = username
         self.password = password
         self.driver = webdriver.Chrome(service=service, options=chromeOptions)
+        
+        self.connect = sl.connect("user.db")
+        
+        with self.connect:
+            self.cursor = self.connect.cursor()
+            self.cursor.execute("CREATE TABLE IF NOT EXISTS User (id_user INTEGER, user TEXT, qtd_Following INTEGER, following TEXT, PRIMARY KEY('id_user' AUTOINCREMENT))")
     
-    def find_files(self, folderPath):
-        filesNoExtension = []
+    # def find_files(self, folderPath):
+    #     filesNoExtension = []
 
-        # Getting all files from python folder   
-        for path in os.listdir(folderPath):
-            indexFollowing = path.find(f"{self.user}")
-            if os.path.isfile(os.path.join(folderPath, path)) and indexFollowing == 0:
-                ponto = path.index(".")
-                if ponto != -1:
-                    filesNoExtension.append(path.replace(str(path[ponto:]), ""))
+    #     # Getting all files from python folder   
+    #     for path in os.listdir(folderPath):
+    #         indexFollowing = path.find(f"{self.user}")
+    #         if os.path.isfile(os.path.join(folderPath, path)) and indexFollowing == 0:
+    #             ponto = path.index(".")
+    #             if ponto != -1:
+    #                 filesNoExtension.append(path.replace(str(path[ponto:]), ""))
 
-        # Checks if the files exists
-        if len(filesNoExtension) == 0:
-            print("No previous files were found.")
-            indexFollowing = -1
-            last_char = 0
-            return indexFollowing, last_char
-        else:
-            indexFollowing = 0
-            maxFileName = ""
-            for i in filesNoExtension:
-                if len(i) >= len(maxFileName):
-                    maxFileName = i
-                    last_char1 = maxFileName[-2:]
+    #     # Checks if the files exists
+    #     if len(filesNoExtension) == 0:
+    #         print("No previous files were found.")
+    #         indexFollowing = -1
+    #         last_char = 0
+    #         return indexFollowing, last_char
+    #     else:
+    #         indexFollowing = 0
+    #         maxFileName = ""
+    #         for i in filesNoExtension:
+    #             if len(i) >= len(maxFileName):
+    #                 maxFileName = i
+    #                 last_char1 = maxFileName[-2:]
             
-            last_char = filesNoExtension[-1][-1]
-            if int(last_char) < int(last_char1):
-                last_char = last_char1
+    #         last_char = filesNoExtension[-1][-1]
+    #         if int(last_char) < int(last_char1):
+    #             last_char = last_char1
 
-            return indexFollowing, last_char
+    #         return indexFollowing, last_char
     
-    def create_files(self, path, indexFollowing, last_char, following):
-        following_string = " ".join(following)
-        if indexFollowing == -1:
-            os.system('cls')
-            print(f'\nFile created: following 1.txt\n')
-            with open(f'{path}{self.user} 1.txt', 'w') as f:
-                f.write(following_string)
-        elif indexFollowing == 0 and int(last_char) >= 1:
-            os.system('cls')
-            print(f'\nFile created: following {int(last_char)+1}.txt')
-            with open(f'{path}{self.user} {int(last_char)+1}.txt', 'w') as f:
-                f.write(following_string)
+    # def create_files(self, path, indexFollowing, last_char, following):
+    #     following_string = " ".join(following)
+    #     if indexFollowing == -1:
+    #         os.system('cls')
+    #         print(f'\nFile created: following 1.txt\n')
+    #         with open(f'{path}{self.user} 1.txt', 'w') as f:
+    #             f.write(following_string)
+    #     elif indexFollowing == 0 and int(last_char) >= 1:
+    #         os.system('cls')
+    #         print(f'\nFile created: {self.user} {int(last_char)+1}.txt')
+    #         with open(f'{path}{self.user} {int(last_char)+1}.txt', 'w') as f:
+    #             f.write(following_string)
 
     def login(self):
         self.driver.get('https://twitter.com/i/flow/login')
@@ -128,8 +135,26 @@ class TwitterFinder:
         
         print(f"total amount registered: {len(followingList)}.")
 
-        return followingList
+        self.qtd_Following = qtd_Following
+        self.followingList = followingList
+        return followingList 
 
+    def add_database(self):
+        followingString = " ".join(self.followingList)
+        valores = [self.user, self.qtd_Following, followingString]
+        
+        with self.connect:
+            query = ("INSERT INTO User (user, qtd_Following, following) VALUES (?, ?, ?)")
+            self.cursor.execute(query, valores)
+            
+    def get_database(self):
+        with self.connect:
+            self.cursor.execute("SELECT * FROM User WHERE id_user = 2")
+            result = self.cursor.fetchall()
+            return result
+            
+    
+    
 # twitterFinder = TwitterFinder()
 
 if __name__ == '__main__':
