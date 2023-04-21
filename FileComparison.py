@@ -51,5 +51,4 @@ def fileComparison(path1, path2):
         print(f"{len(notFollowing)} pessoas que pararam de serem seguidas ou mudaram de @. \n")
     
 if __name__ == "__main__":    
-    fileComparison(path1='D:\Python\\following 18.txt', path2='D:\Python\\following 16.txt')
-    
+    fileComparison(path1='D:\Python\\following 1.txt', path2='D:\\Python Garbage\\following 16.txt')
