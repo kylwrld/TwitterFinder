@@ -10,23 +10,23 @@ import os
 from dotenv import load_dotenv
 
 class TwitterFinder:
-    def __init__(self, username, password) -> None:
+    def __init__(self, username, password, user) -> None:
         service = ChromeService(executable_path=ChromeDriverManager().install())
         chromeOptions = webdriver.ChromeOptions()
         chromeOptions.add_argument("--headless")
         chromeOptions.add_argument("--window-size=880,1080")
         
+        self.user = user
         self.username = username
         self.password = password
         self.driver = webdriver.Chrome(service=service, options=chromeOptions)
     
-    @staticmethod
-    def find_files(folderPath):
+    def find_files(self, folderPath):
         filesNoExtension = []
 
         # Getting all files from python folder   
         for path in os.listdir(folderPath):
-            indexFollowing = path.find("following")
+            indexFollowing = path.find(f"{self.user}")
             if os.path.isfile(os.path.join(folderPath, path)) and indexFollowing == 0:
                 ponto = path.index(".")
                 if ponto != -1:
@@ -52,18 +52,17 @@ class TwitterFinder:
 
             return indexFollowing, last_char
     
-    @staticmethod
-    def create_files(path, indexFollowing, last_char, following):
+    def create_files(self, path, indexFollowing, last_char, following):
         following_string = " ".join(following)
         if indexFollowing == -1:
             os.system('cls')
             print(f'\nFile created: following 1.txt\n')
-            with open(f'following 1.txt', 'w') as f:
+            with open(f'{path}{self.user} 1.txt', 'w') as f:
                 f.write(following_string)
         elif indexFollowing == 0 and int(last_char) >= 1:
             os.system('cls')
             print(f'\nFile created: following {int(last_char)+1}.txt')
-            with open(f'{path}following {int(last_char)+1}.txt', 'w') as f:
+            with open(f'{path}{self.user} {int(last_char)+1}.txt', 'w') as f:
                 f.write(following_string)
 
     def login(self):
@@ -76,12 +75,12 @@ class TwitterFinder:
         self.driver.find_element(By.XPATH, ('/html/body/div/div/div/div[1]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[2]/div/div[1]/div/div/div')).click()
         time.sleep(5)
 
-    def get_following(self, user):
+    def get_following(self):
         self.login()
-        self.driver.get(f"https://twitter.com/{user}")
+        self.driver.get(f"https://twitter.com/{self.user}")
         self.driver.implicitly_wait(60)
         qtd_Following = self.driver.find_element(By.XPATH, ('//a[contains(@href,"/following")]/span[1]/span[1]')).text
-        self.driver.get(f"https://twitter.com/{user}/following")
+        self.driver.get(f"https://twitter.com/{self.user}/following")
         follow_ids = set()
         followingList = []
 
@@ -137,13 +136,14 @@ if __name__ == '__main__':
     load_dotenv()
     username = os.getenv("UR")
     password = os.getenv("PSS")
-    tf = TwitterFinder(username=username, password=password)
-    user = 'dearfuturecat'
+    user = 'ArknoXI'
+    tf = TwitterFinder(username=username, password=password, user=user)
     
-    folderPath = "D:\\Python\\followingFolder"
+    folderPath = r"D:\Python\followingFolder"
     
-    following = tf.get_following(user)
+    following = tf.get_following()
+
     char = tf.find_files(folderPath=folderPath)
     tf.create_files(f"{folderPath}\\", char[0], char[1], following)
     intChar = int(char[1]) + 1
-    fileComparison(f'{folderPath}\\following {intChar}.txt', f'{folderPath}\\following {intChar-1}.txt')
+    fileComparison(f'{folderPath}\\{user} {intChar}.txt', f'{folderPath}\\{user} {intChar-1}.txt')
