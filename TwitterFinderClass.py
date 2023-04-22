@@ -11,66 +11,16 @@ from dotenv import load_dotenv
 import sqlite3 as sl
 
 class TwitterFinder:
-    def __init__(self, username, password, user):
+    def __init__(self, username, password):
         service = ChromeService(executable_path=ChromeDriverManager().install())
         chromeOptions = webdriver.ChromeOptions()
         chromeOptions.add_argument("--headless")
         chromeOptions.add_argument("--window-size=880,1080")
         
-        self.user = user
         self.username = username
         self.password = password
         self.driver = webdriver.Chrome(service=service, options=chromeOptions)
-        
-        self.connect = sl.connect("user.db")
-        
-        with self.connect:
-            self.cursor = self.connect.cursor()
-            self.cursor.execute("CREATE TABLE IF NOT EXISTS User (id_user INTEGER, user TEXT, qtd_Following INTEGER, following TEXT, PRIMARY KEY('id_user' AUTOINCREMENT))")
     
-    # def find_files(self, folderPath):
-    #     filesNoExtension = []
-
-    #     # Getting all files from python folder   
-    #     for path in os.listdir(folderPath):
-    #         indexFollowing = path.find(f"{self.user}")
-    #         if os.path.isfile(os.path.join(folderPath, path)) and indexFollowing == 0:
-    #             ponto = path.index(".")
-    #             if ponto != -1:
-    #                 filesNoExtension.append(path.replace(str(path[ponto:]), ""))
-
-    #     # Checks if the files exists
-    #     if len(filesNoExtension) == 0:
-    #         print("No previous files were found.")
-    #         indexFollowing = -1
-    #         last_char = 0
-    #         return indexFollowing, last_char
-    #     else:
-    #         indexFollowing = 0
-    #         maxFileName = ""
-    #         for i in filesNoExtension:
-    #             if len(i) >= len(maxFileName):
-    #                 maxFileName = i
-    #                 last_char1 = maxFileName[-2:]
-            
-    #         last_char = filesNoExtension[-1][-1]
-    #         if int(last_char) < int(last_char1):
-    #             last_char = last_char1
-
-    #         return indexFollowing, last_char
-    
-    # def create_files(self, path, indexFollowing, last_char, following):
-    #     following_string = " ".join(following)
-    #     if indexFollowing == -1:
-    #         os.system('cls')
-    #         print(f'\nFile created: following 1.txt\n')
-    #         with open(f'{path}{self.user} 1.txt', 'w') as f:
-    #             f.write(following_string)
-    #     elif indexFollowing == 0 and int(last_char) >= 1:
-    #         os.system('cls')
-    #         print(f'\nFile created: {self.user} {int(last_char)+1}.txt')
-    #         with open(f'{path}{self.user} {int(last_char)+1}.txt', 'w') as f:
-    #             f.write(following_string)
 
     def login(self):
         self.driver.get('https://twitter.com/i/flow/login')
@@ -82,7 +32,8 @@ class TwitterFinder:
         self.driver.find_element(By.XPATH, ('/html/body/div/div/div/div[1]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[2]/div/div[1]/div/div/div')).click()
         time.sleep(5)
 
-    def get_following(self):
+    def get_following(self, user):
+        self.user = user
         self.login()
         self.driver.get(f"https://twitter.com/{self.user}")
         self.driver.implicitly_wait(60)
@@ -138,24 +89,84 @@ class TwitterFinder:
         self.qtd_Following = qtd_Following
         self.followingList = followingList
         return followingList 
-
-    def add_database(self):
-        followingString = " ".join(self.followingList)
-        valores = [self.user, self.qtd_Following, followingString]
+            
+    
+class User:
+    # Initializes the connection to the 'user' database
+    def __init__(self, user):
+        self.connect = sl.connect("user.db")
+        
+        self.user = str(user).lower()
         
         with self.connect:
-            query = ("INSERT INTO User (user, qtd_Following, following) VALUES (?, ?, ?)")
-            self.cursor.execute(query, valores)
-            
-    def get_database(self):
+            self.cursor = self.connect.cursor()
+            self.cursor.execute(f"CREATE TABLE IF NOT EXISTS {self.user} (id_user INTEGER, user TEXT, following TEXT, PRIMARY KEY('id_user' AUTOINCREMENT))")
+       
+    # Adds followingList to the 'user' database
+    def add_database(self, followingList: list):
+        followingString = " ".join(followingList)
+        valores = [self.user, followingString]
+        
         with self.connect:
-            self.cursor.execute("SELECT * FROM User WHERE id_user = 2")
-            result = self.cursor.fetchall()
-            return result
+            query = (f"INSERT INTO {self.user} (user, following) VALUES (?, ?)")
+            self.cursor.execute(query, valores)
+    
+    # Returns the given user's table
+    def get_database(self):
+        self.user
+        try:
+            with self.connect:
+                self.cursor.execute(f"SELECT * FROM {self.user}")
+                self.result = self.cursor.fetchall()
+                return self.result
+        except AttributeError as e:
+            print("You must have forgotten to call the 'add_database' function to pass the username and add something to the database")
+            print(e)
             
+    def get_last_two(self):
+        followingList = []
+        followingDict = {}
+        users = []
+        result = self.get_database()
+        
+        for user in result:
+            users.append(f"{user[1]}:{user[0]}")
+            followingDict.update({f"{user[1]}:{user[0]}":f"{user[2]}"})
+
+        for user in users:
+            if user in followingDict.keys():
+                followingList.append(followingDict[user])
+        
+        mostRecent = []
+        secondRecent = []
+        mostRecent.append(followingList[-1]) # Most recent
+        try:
+            secondRecent.append(followingList[-2])
+            return mostRecent, secondRecent
+        except IndexError as e:
+            print("You need to run the program twice to compare two lists")
+            print(e)
+
     
-    
-# twitterFinder = TwitterFinder()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 if __name__ == '__main__':
     load_dotenv()
