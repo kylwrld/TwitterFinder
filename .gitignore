@@ -1,6 +1,8 @@
 
 *.db
 example.py
+keeper.py
+teste3.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

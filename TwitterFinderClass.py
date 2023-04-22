@@ -113,7 +113,6 @@ class User:
     
     # Returns the given user's table
     def get_database(self):
-        self.user
         try:
             with self.connect:
                 self.cursor.execute(f"SELECT * FROM {self.user}")
@@ -126,16 +125,13 @@ class User:
     def get_last_two(self):
         followingList = []
         followingDict = {}
-        users = []
         result = self.get_database()
         
         for user in result:
-            users.append(f"{user[1]}:{user[0]}")
-            followingDict.update({f"{user[1]}:{user[0]}":f"{user[2]}"})
-
-        for user in users:
-            if user in followingDict.keys():
-                followingList.append(followingDict[user])
+            followingDict.update({f"{user[1]}-{user[0]}":f"{user[2]}"})
+        
+        for item in followingDict.values():
+            followingList.append(item)
         
         mostRecent = []
         secondRecent = []
@@ -147,40 +143,49 @@ class User:
             print("You need to run the program twice to compare two lists")
             print(e)
 
+    def show_tables(self): 
+        with self.connect:
+            sql_query = "SELECT name FROM sqlite_master WHERE type='table';"
+            self.cursor.execute(sql_query)
+            
+            print("List of tables:")
+            print("\t",self.cursor.fetchall())
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# if __name__ == '__main__':
+    # load_dotenv()
+    # username = os.getenv("UR")
+    # password = os.getenv("PSS")
+    # user = 'ArknoXI'
+    # tf = TwitterFinder(username=username, password=password, user=user)
     
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-if __name__ == '__main__':
-    load_dotenv()
-    username = os.getenv("UR")
-    password = os.getenv("PSS")
-    user = 'ArknoXI'
-    tf = TwitterFinder(username=username, password=password, user=user)
+    # folderPath = r"D:\Python\followingFolder"
     
-    folderPath = r"D:\Python\followingFolder"
-    
-    following = tf.get_following()
+    # following = tf.get_following()
 
-    char = tf.find_files(folderPath=folderPath)
-    tf.create_files(f"{folderPath}\\", char[0], char[1], following)
-    intChar = int(char[1]) + 1
-    fileComparison(f'{folderPath}\\{user} {intChar}.txt', f'{folderPath}\\{user} {intChar-1}.txt')
-    #
+    # char = tf.find_files(folderPath=folderPath)
+    # tf.create_files(f"{folderPath}\\", char[0], char[1], following)
+    # intChar = int(char[1]) + 1
+    # fileComparison(f'{folderPath}\\{user} {intChar}.txt', f'{folderPath}\\{user} {intChar-1}.txt')
+    
+    # u = User(user)
+    # u.show_tables()
