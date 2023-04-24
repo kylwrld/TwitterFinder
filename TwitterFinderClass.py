@@ -12,17 +12,20 @@ import sqlite3 as sl
 
 class TwitterFinder:
     def __init__(self, username, password):
+        self.username = username
+        self.password = password
+    
+
+    def __init_driver(self):
         service = ChromeService(executable_path=ChromeDriverManager().install())
         chromeOptions = webdriver.ChromeOptions()
         chromeOptions.add_argument("--headless")
         chromeOptions.add_argument("--window-size=880,1080")
         
-        self.username = username
-        self.password = password
         self.driver = webdriver.Chrome(service=service, options=chromeOptions)
-    
 
     def login(self):
+        self.__init_driver()
         self.driver.get('https://twitter.com/i/flow/login')
         self.driver.implicitly_wait(60)
         self.driver.find_element(By.XPATH, ("//input[@autocomplete='username']")).send_keys(self.username)
@@ -31,6 +34,7 @@ class TwitterFinder:
         self.driver.find_element(By.XPATH, ("//input[@autocomplete='current-password']")).send_keys(self.password)
         self.driver.find_element(By.XPATH, ('/html/body/div/div/div/div[1]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[2]/div/div[1]/div/div/div')).click()
         time.sleep(5)
+        print("Pass")
 
     def get_following(self, user):
         self.user = user
@@ -86,6 +90,49 @@ class TwitterFinder:
         
         print(f"total amount registered: {len(followingList)}.")
 
-        self.qtd_Following = qtd_Following
-        self.followingList = followingList
-        return followingList 
+        return followingList
+    
+    class FileHandle():
+        def __find_files(self, folderPath):
+            filesNoExtension = []
+
+            # Getting all files from python folder   
+            for path in os.listdir(folderPath):
+                indexFollowing = path.find(f"{self.user}")
+                if os.path.isfile(os.path.join(folderPath, path)) and indexFollowing == 0:
+                    ponto = path.index(".")
+                    if ponto != -1:
+                        filesNoExtension.append(path.replace(str(path[ponto:]), ""))
+
+            # Checks if the files exists
+            if len(filesNoExtension) == 0:
+                print("No previous files were found.")
+                self.indexFollowing = -1
+                self.last_char = 0
+
+            else:
+                self.indexFollowing = 0
+                maxFileName = ""
+                for i in filesNoExtension:
+                    if len(i) >= len(maxFileName):
+                        maxFileName = i
+                        last_char1 = maxFileName[-2:]
+                
+                self.last_char = filesNoExtension[-1][-1]
+                if int(self.last_char) < int(last_char1):
+                    self.last_char = last_char1
+        
+        def create_files(self, path, following):
+            self.__find_files()
+            
+            following_string = " ".join(following)
+            if self.indexFollowing == -1:
+                os.system('cls')
+                print(f'\nFile created: following 1.txt\n')
+                with open(f'{path}{self.user} 1.txt', 'w') as f:
+                    f.write(following_string)
+            elif self.indexFollowing == 0 and int(self.last_char) >= 1:
+                os.system('cls')
+                print(f'\nFile created: following {int(self.last_char)+1}.txt')
+                with open(f'{path}{self.user} {int(self.last_char)+1}.txt', 'w') as f:
+                    f.write(following_string)

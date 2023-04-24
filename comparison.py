@@ -3,9 +3,15 @@ def comparison(list1, list2):
     following = []
     notFollowing = []
     
-    list1l = list1[0].split(" ")
-    list2l = list2[0].split(" ")
+    list1l = list1.split(" ")
+    list2l = list2.split(" ")
     
+    for i in list1l:
+        list1l[list1l.index(i)] = list1l[list1l.index(i)].lower()
+        
+    for i in list2l:
+        list2l[list2l.index(i)] = list2l[list2l.index(i)].lower()
+        
     if list1l == list2l:
         print("Nothing changed.")
     else:
