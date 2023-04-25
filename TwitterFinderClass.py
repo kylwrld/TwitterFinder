@@ -22,52 +22,52 @@ class TwitterFinder:
         chromeOptions.add_argument("--headless")
         chromeOptions.add_argument("--window-size=880,1080")
         
-        self.driver = webdriver.Chrome(service=service, options=chromeOptions)
+        driver = webdriver.Chrome(service=service, options=chromeOptions)
+        return driver
 
-    def login(self):
-        self.__init_driver()
-        self.driver.get('https://twitter.com/i/flow/login')
-        self.driver.implicitly_wait(60)
-        self.driver.find_element(By.XPATH, ("//input[@autocomplete='username']")).send_keys(self.username)
-        self.driver.implicitly_wait(60)
-        self.driver.find_element(By.XPATH, ('/html/body/div/div/div/div[1]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div/div/div/div[6]')).click()
-        self.driver.find_element(By.XPATH, ("//input[@autocomplete='current-password']")).send_keys(self.password)
-        self.driver.find_element(By.XPATH, ('/html/body/div/div/div/div[1]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[2]/div/div[1]/div/div/div')).click()
+    def __login(self, driver):
+        driver.get('https://twitter.com/i/flow/login')
+        driver.implicitly_wait(60)
+        driver.find_element(By.XPATH, ("//input[@autocomplete='username']")).send_keys(self.username)
+        driver.implicitly_wait(60)
+        driver.find_element(By.XPATH, ('/html/body/div/div/div/div[1]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div/div/div/div[6]')).click()
+        driver.find_element(By.XPATH, ("//input[@autocomplete='current-password']")).send_keys(self.password)
+        driver.find_element(By.XPATH, ('/html/body/div/div/div/div[1]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[2]/div/div[1]/div/div/div')).click()
         time.sleep(5)
         print("Pass")
 
     def get_following(self, user):
-        self.user = user
-        self.login()
-        self.driver.get(f"https://twitter.com/{self.user}")
-        self.driver.implicitly_wait(60)
-        qtd_Following = self.driver.find_element(By.XPATH, ('//a[contains(@href,"/following")]/span[1]/span[1]')).text
-        self.driver.get(f"https://twitter.com/{self.user}/following")
+        driver = self.__init_driver()
+        self.__login(driver)
+        driver.get(f"https://twitter.com/{user}")
+        driver.implicitly_wait(60)
+        qtd_Following = driver.find_element(By.XPATH, ('//a[contains(@href,"/following")]/span[1]/span[1]')).text
+        driver.get(f"https://twitter.com/{user}/following")
         follow_ids = set()
         followingList = []
 
         currentPosition = None
-        pagePosition = self.driver.execute_script("return window.pageYOffset;")
-        self.driver.get_screenshot_as_file("screenshot.png")
+        pagePosition = driver.execute_script("return window.pageYOffset;")
+        driver.get_screenshot_as_file("screenshot.png")
         
         while True:
             
             time.sleep(0.5)
-            pagePosition = self.driver.execute_script("return window.pageYOffset;")
+            pagePosition = driver.execute_script("return window.pageYOffset;")
             
             # Div with all following
-            self.driver.implicitly_wait(60)
-            div_follow = self.driver.find_element(By.XPATH, ('//div[contains(@data-testid,"primaryColumn")]'))
-            self.driver.get_screenshot_as_file("screenshot.png")
+            driver.implicitly_wait(60)
+            div_follow = driver.find_element(By.XPATH, ('//div[contains(@data-testid,"primaryColumn")]'))
+            driver.get_screenshot_as_file("screenshot.png")
             
             # Div with all user cell
-            self.driver.implicitly_wait(60)
+            driver.implicitly_wait(60)
             userCell = div_follow.find_elements(By.XPATH, ('//div[contains(@data-testid,"UserCell")]'))
             
             for card in userCell:
-                self.driver.implicitly_wait(60)
+                driver.implicitly_wait(60)
                 element = card.find_element(By.XPATH, ('.//div[1]/div[1]/div[1]//a[1]'))
-                self.driver.implicitly_wait(60)
+                driver.implicitly_wait(60)
                 follow_element = element.get_attribute('href')
                 follow_id = str(follow_element)
                 follow_element = '@' + str(follow_element).split('/')[-1]
@@ -84,11 +84,14 @@ class TwitterFinder:
                 break
             
             time.sleep(0.5)
-            currentPosition = self.driver.execute_script("return window.pageYOffset;")
-            self.driver.implicitly_wait(60)
-            self.driver.find_element(By.XPATH, ('/html/body')).send_keys(Keys.PAGE_DOWN)
+            currentPosition = driver.execute_script("return window.pageYOffset;")
+            driver.implicitly_wait(60)
+            driver.find_element(By.XPATH, ('/html/body')).send_keys(Keys.PAGE_DOWN)
         
         print(f"total amount registered: {len(followingList)}.")
+
+        followingList = [x.lower() for x in followingList]
+        followingList = sorted(followingList)
 
         return followingList
     

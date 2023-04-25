@@ -10,7 +10,27 @@ class Database:
         with self.connect:
             self.cursor = self.connect.cursor()
             self.cursor.execute(f"CREATE TABLE IF NOT EXISTS {self.user} (id_user INTEGER, user TEXT, following TEXT, PRIMARY KEY('id_user' AUTOINCREMENT))")
-       
+    
+    def __update_ids(self):
+        with self.connect:
+            self.cursor.execute(f"SELECT id_user FROM arknoxi")
+            idselected = self.cursor.fetchall()
+            
+        idSelected = []
+        for i in idselected:
+            index = i[0]
+            idSelected.append(index)    
+
+        updated = []
+        for id in range(len(idSelected)):
+            updated.append(id+1)
+
+        with self.connect:
+            query = f"UPDATE arknoxi SET id_user = ? WHERE id_user = ?"
+            for i in range(len(updated)):
+                self.cursor.execute(query, [updated[i], idSelected[i]])
+            self.connect.commit()
+    
     # Adds followingList to the 'user' database
     def add_database(self, followingList: list):
         followingString = " ".join(followingList)
@@ -22,6 +42,7 @@ class Database:
             with self.connect:
                 query = (f"INSERT INTO {self.user} (user, following) VALUES (?, ?)")
                 self.cursor.execute(query, values)  
+                self.__update_ids()
         else:
             for following in comparison:
                 if followingString in following:
@@ -31,46 +52,22 @@ class Database:
                     with self.connect:
                         query = (f"INSERT INTO {self.user} (user, following) VALUES (?, ?)")
                         self.cursor.execute(query, values)
+                        self.__update_ids()
                     break
             else:
                 values = [self.user, followingString]
                 with self.connect:
                     query = (f"INSERT INTO {self.user} (user, following) VALUES (?, ?)")
                     self.cursor.execute(query, values) 
+                    self.__update_ids()
     
     
     def delete_by_id(self, id: int):
         with self.connect:
-            query = (f"DELETE FROM {self.user} WHERE id_user = ?")
-            self.cursor.execute(query, str(id))
+            self.cursor.execute(f"DELETE FROM {self.user} WHERE id_user = {id}")
             self.connect.commit()
         
-        with self.connect:
-            self.cursor.execute(f"SELECT id_user FROM {self.user}")
-            idselected = self.cursor.fetchall()
-            
-        idselectedlist = []
-        for id in idselected:
-            listindex = idselected[idselected.index(id)][0]
-            idselectedlist.append(listindex)
-        
-        missingNumbers = sorted(set(range(idselectedlist[0], idselectedlist[-1])) - set(idselectedlist))
-        allNumbers = []
-        
-        for i in idselectedlist:
-            allNumbers.append(i)
-        for i in missingNumbers:
-            allNumbers.append(i)
-        if 1 not in allNumbers:
-            allNumbers.append(1)
-        allNumbers.sort()
-        
-        values = [allNumbers[0:-1], idselectedlist]
-        with self.connect:
-            query = f"UPDATE {self.user} SET id_user = ? WHERE id_user = ?"
-            for i in range(len(allNumbers)-1):
-                self.cursor.execute(query, [allNumbers[i], idselectedlist[i]])
-            self.connect.commit()
+        self.__update_ids()
 
     def get_only_following(self):
         with self.connect:
@@ -124,7 +121,7 @@ class Database:
             print("List of tables:")
             print("\t",self.cursor.fetchall())
             
-    def comparison(list1, list2):
+    def comparison(self, list1, list2):
         following = []
         notFollowing = []
         
