@@ -45,21 +45,15 @@ class Database:
                 self.__update_ids()
         else:
             for following in comparison:
-                if followingString in following:
+                if followingList == list(following):
                     print(f"Alredy in database: id={comparison.index(following)+1}", )
-                    
-                    values = [self.user, followingString]
-                    with self.connect:
-                        query = (f"INSERT INTO {self.user} (user, following) VALUES (?, ?)")
-                        self.cursor.execute(query, values)
-                        self.__update_ids()
                     break
-            else:
-                values = [self.user, followingString]
-                with self.connect:
-                    query = (f"INSERT INTO {self.user} (user, following) VALUES (?, ?)")
-                    self.cursor.execute(query, values) 
-                    self.__update_ids()
+                    
+            values = [self.user, followingString]
+            with self.connect:
+                query = (f"INSERT INTO {self.user} (user, following) VALUES (?, ?)")
+                self.cursor.execute(query, values)
+                self.__update_ids()
     
     
     def delete_by_id(self, id: int):
@@ -120,19 +114,20 @@ class Database:
             
             print("List of tables:")
             print("\t",self.cursor.fetchall())
-            
-    def comparison(self, list1, list2):
+    
+    @staticmethod
+    def comparison(list1, list2):
         following = []
         notFollowing = []
         
         list1l = list1.split(" ")
         list2l = list2.split(" ")
         
-        for i in list1l:
-            list1l[list1l.index(i)] = list1l[list1l.index(i)].lower()
+        # for i in list1l:
+        #     list1l[list1l.index(i)] = list1l[list1l.index(i)].lower()
             
-        for i in list2l:
-            list2l[list2l.index(i)] = list2l[list2l.index(i)].lower()
+        # for i in list2l:
+        #     list2l[list2l.index(i)] = list2l[list2l.index(i)].lower()
             
         if list1l == list2l:
             print("Nothing changed.")
