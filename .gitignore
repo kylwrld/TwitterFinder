@@ -8,6 +8,8 @@ fileHandle.py
 screenshot.png
 testes.py
 addKeeperDatabase.py
+comparison.py
+show_tables.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
