@@ -19,7 +19,7 @@ class TwitterFinder:
     def __init_driver(self):
         service = ChromeService(executable_path=ChromeDriverManager().install())
         chromeOptions = webdriver.ChromeOptions()
-        chromeOptions.add_argument("--headless")
+        chromeOptions.add_argument("--headless=new")
         chromeOptions.add_argument("--window-size=880,1080")
         
         driver = webdriver.Chrome(service=service, options=chromeOptions)
@@ -45,6 +45,10 @@ class TwitterFinder:
         driver.get(f"https://twitter.com/{self.user}/following")
         follow_ids = set()
         followingList = []
+        
+        dot = qtd_Following.find('.')
+        if dot > -1:
+            qtd_Following = qtd_Following.replace('.', '')
 
         currentPosition = None
         pagePosition = driver.execute_script("return window.pageYOffset;")
