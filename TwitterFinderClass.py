@@ -34,7 +34,7 @@ class TwitterFinder:
         driver.find_element(By.XPATH, ("//input[@autocomplete='current-password']")).send_keys(self.password)
         driver.find_element(By.XPATH, ('/html/body/div/div/div/div[1]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[2]/div/div[1]/div/div/div')).click()
         time.sleep(5)
-        print("Pass")
+        print("Logged in")
 
     def get_following(self):
         driver = self.__init_driver()
@@ -43,7 +43,6 @@ class TwitterFinder:
         driver.implicitly_wait(60)
         qtd_Following = driver.find_element(By.XPATH, ('//a[contains(@href,"/following")]/span[1]/span[1]')).text
         driver.get(f"https://twitter.com/{self.user}/following")
-        follow_ids = set()
         followingList = []
         
         dot = qtd_Following.find('.')
@@ -73,13 +72,11 @@ class TwitterFinder:
                 element = card.find_element(By.XPATH, ('.//div[1]/div[1]/div[1]//a[1]'))
                 driver.implicitly_wait(60)
                 follow_element = element.get_attribute('href')
-                follow_id = str(follow_element)
                 follow_element = '@' + str(follow_element).split('/')[-1]
                 
                 if follow_element in followingList:
                     continue
                 else:
-                    follow_ids.add(follow_id)
                     followingList.append(follow_element)
                 
             print(f"already registered: {len(followingList)}.")
@@ -98,7 +95,67 @@ class TwitterFinder:
         followingList = sorted(followingList)
 
         return followingList
+    
+    def get_followers(self):
+        driver = self.__init_driver()
+        self.__login(driver)
+        driver.get(f"https://twitter.com/{self.user}")
+        driver.implicitly_wait(60)
+        qtd_Followers = driver.find_element(By.XPATH, ('//a[contains(@href,"/followers")]/span[1]/span[1]')).text
+        driver.get(f"https://twitter.com/{self.user}/followers")
+        followersList = []
+        
+        dot = qtd_Followers.find('.')
+        if dot > -1:
+            qtd_Followers = qtd_Followers.replace('.', '')
 
+        currentPosition = None
+        pagePosition = driver.execute_script("return window.pageYOffset;")
+        driver.get_screenshot_as_file("screenshot.png")
+        
+        while True:
+            
+            time.sleep(0.5)
+            pagePosition = driver.execute_script("return window.pageYOffset;")
+            
+            # Div with all following
+            driver.implicitly_wait(60)
+            div_follow = driver.find_element(By.XPATH, ('//div[contains(@data-testid,"primaryColumn")]'))
+            driver.get_screenshot_as_file("screenshot.png")
+            
+            # Div with all user cell
+            driver.implicitly_wait(60)
+            userCell = div_follow.find_elements(By.XPATH, ('//div[contains(@data-testid,"UserCell")]'))
+            
+            for card in userCell:
+                driver.implicitly_wait(60)
+                element = card.find_element(By.XPATH, ('.//div[1]/div[1]/div[1]//a[1]'))
+                driver.implicitly_wait(60)
+                follow_element = element.get_attribute('href')
+                follow_element = '@' + str(follow_element).split('/')[-1]
+                
+                if follow_element in followersList:
+                    continue
+                else:
+                    followersList.append(follow_element)
+                
+            print(f"already registered: {len(followersList)}.")
+            
+            if pagePosition == currentPosition or len(followersList) == int(qtd_Followers):
+                break
+            
+            time.sleep(0.5)
+            currentPosition = driver.execute_script("return window.pageYOffset;")
+            driver.implicitly_wait(60)
+            driver.find_element(By.XPATH, ('/html/body')).send_keys(Keys.PAGE_DOWN)
+        
+        print(f"total amount registered: {len(followersList)}.")
+
+        followersList = [x.lower() for x in followersList]
+        followersList = sorted(followersList)
+
+        return followersList
+    
     def __find_files(self, folderPath):
         filesNoExtension = []
 
